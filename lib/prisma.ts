@@ -1,7 +1,7 @@
 
 // lib/prisma.ts
 
-import { PrismaClient } from "@prisma/client"; // এখানে `from "./generated/prisma"` এর বদলে `@prisma/client` ব্যবহার করুন।
+import { PrismaClient } from "./generated/prisma";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 

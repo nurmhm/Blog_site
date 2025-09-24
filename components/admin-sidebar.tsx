@@ -70,11 +70,15 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminAuth")
-    localStorage.removeItem("adminUser")
-    router.push("/admin/login")
-  }
+  const handleLogout = async () => {
+    const response = await fetch("/api/logout", {
+      method: "POST",
+    });
+
+    if (response.ok) {
+      router.push("/admin/login");
+    }
+  };
 
   return (
     <Sidebar>
@@ -127,7 +131,7 @@ export function AdminSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        <Button variant="outline" onClick={handleLogout} className="w-full justify-start bg-transparent">
+        <Button variant="outline" className="w-full justify-start bg-transparent" onClick={handleLogout}>
           <LogOut className="h-4 w-4 mr-2" />
           লগআউট
         </Button>

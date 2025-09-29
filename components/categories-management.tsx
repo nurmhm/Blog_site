@@ -1,16 +1,21 @@
 "use client"
 
-import type React from "react"
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Edit, Trash2, BookOpen, MessageSquare, Clock, Users, Heart, Star } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { ZCCategory } from "@/validators/category"
+import { TCCategory } from "@/types"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
+import { useCreateCategory } from "@/hooks/category_hooks"
+import { toast } from "sonner"
 
 // Dummy categories data
 const dummyCategories = [
@@ -71,40 +76,36 @@ export function CategoriesManagement() {
   const [categories, setCategories] = useState(dummyCategories)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<any>(null)
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    icon: "BookOpen",
+  const createCategory = useCreateCategory();
+  
+  const form = useForm<TCCategory>({
+    resolver: zodResolver(ZCCategory),
+    defaultValues: {
+      name: "",
+      description: ""
+    },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (editingCategory) {
-      // Update existing category
-      setCategories(categories.map((cat) => (cat.id === editingCategory.id ? { ...cat, ...formData } : cat)))
-    } else {
-      // Add new category
-      const newCategory = {
-        id: Date.now(),
-        ...formData,
-        postCount: 0,
-      }
-      setCategories([...categories, newCategory])
+  const handleSubmit = (data:any) => {
+    try {
+      createCategory.mutate(data,{
+        onSuccess: (data) => {
+          console.log(data)
+          toast.success("ক্যাটেগরি সফলভাবে তৈরি হয়েছে")
+        },
+        onError: (error) => {
+          console.log(error)
+          toast.error("ক্যাটেগরি তৈরি ব্যর্থ হয়েছে")
+        }
+      })
+    } catch (error) {
+      toast.error("ক্যাটেগরি তৈরি ব্যর্থ হয়েছে")
     }
-
-    setFormData({ name: "", description: "", icon: "BookOpen" })
-    setEditingCategory(null)
-    setIsDialogOpen(false)
+    console.log(data,"fommmmmmmmmmmmmmmmmmmmmmmmmmmm")
   }
 
   const handleEdit = (category: any) => {
-    setEditingCategory(category)
-    setFormData({
-      name: category.name,
-      description: category.description,
-      icon: category.icon,
-    })
+
     setIsDialogOpen(true)
   }
 
@@ -123,10 +124,7 @@ export function CategoriesManagement() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
-              onClick={() => {
-                setEditingCategory(null)
-                setFormData({ name: "", description: "", icon: "BookOpen" })
-              }}
+             
             >
               <Plus className="mr-2 h-4 w-4" />
               নতুন ক্যাটেগরি
@@ -136,32 +134,47 @@ export function CategoriesManagement() {
             <DialogHeader>
               <DialogTitle>{editingCategory ? "ক্যাটেগরি সম্পাদনা" : "নতুন ক্যাটেগরি"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">ক্যাটেগরির নাম</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">বিবরণ</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
-                />
-              </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+         
+
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ক্যাটেগরির নাম</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                  
+                )}></FormField>
+
+                <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>বিবরণ</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}></FormField>
+           
+              
               <div className="flex gap-2">
-                <Button type="submit">{editingCategory ? "আপডেট করুন" : "তৈরি করুন"}</Button>
+                {/* <Button type="submit">{editingCategory ? "আপডেট করুন" : "তৈরি করুন"}</Button>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   বাতিল
-                </Button>
+                </Button> */}
+                <Button type="submit">{editingCategory ? "আপডেট করুন" : "তৈরি করুন"}</Button>  
               </div>
             </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 // 1. Specify protected and public paths
-const PROTECTED_PATHS = ['/admin'];
-const AUTH_FORMS_PATH = '/admin/login';
+const PROTECTED_PATHS = ["/admin"];
+const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/register"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionToken = request.cookies.get('sessionToken')?.value;
+  const sessionToken = request.cookies.get("sessionToken")?.value;
   const isAuthenticated = !!sessionToken;
 
   console.log(`Middleware running for path: ${pathname}`);
@@ -21,20 +21,20 @@ export function middleware(request: NextRequest) {
   }
 
   // 3. Handle redirection logic
-  const isAuthForm = pathname === AUTH_FORMS_PATH;
+  const isPublicAdminPath = PUBLIC_ADMIN_PATHS.includes(pathname);
 
-  // If user is not authenticated and is trying to access a protected page (that isn't the login page)
-  if (!isAuthenticated && !isAuthForm) {
-    console.log('User not authenticated, redirecting to login.');
-    const loginUrl = new URL(AUTH_FORMS_PATH, request.url);
-    loginUrl.searchParams.set('redirect', pathname); // Optionally add a redirect parameter
+  // If user is not authenticated and is trying to access a protected page (that isn't a public admin path)
+  if (!isAuthenticated && !isPublicAdminPath) {
+    console.log("User not authenticated, redirecting to login.");
+    const loginUrl = new URL("/admin/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname); // Optionally add a redirect parameter
     return NextResponse.redirect(loginUrl);
   }
 
-  // If user is authenticated and is trying to access the login page
-  if (isAuthenticated && isAuthForm) {
-    console.log('User already authenticated, redirecting to dashboard.');
-    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+  // If user is authenticated and is trying to access public admin paths (login/register)
+  if (isAuthenticated && isPublicAdminPath) {
+    console.log("User already authenticated, redirecting to dashboard.");
+    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
   // 4. If none of the above, let the request continue
@@ -43,5 +43,5 @@ export function middleware(request: NextRequest) {
 
 // 5. Configure the matcher to run middleware only on admin routes
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ["/admin/:path*"],
 };

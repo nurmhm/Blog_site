@@ -1,4 +1,4 @@
-
+"use server"
 import { prisma } from "@/lib/prisma";
 import { ZCCategory } from "@/validators/category";
 import { NextResponse } from "next/server";

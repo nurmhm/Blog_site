@@ -1,21 +1,50 @@
-"use client"
+"use client";
 
-
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Edit, Trash2, BookOpen, MessageSquare, Clock, Users, Heart, Star } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { ZCCategory } from "@/validators/category"
-import { TCCategory } from "@/types"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
-import { useCreateCategory } from "@/hooks/category_hooks"
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { useCreateCategory } from "@/hooks/category_hooks";
+import { TCCategory } from "@/types";
+import { ZCCategory } from "@/validators/category";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  BookOpen,
+  Clock,
+  Edit,
+  Heart,
+  MessageSquare,
+  Plus,
+  Star,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
 
 // Dummy categories data
 const dummyCategories = [
@@ -61,7 +90,7 @@ const dummyCategories = [
     postCount: 18,
     icon: "Users",
   },
-]
+];
 
 const iconMap = {
   BookOpen,
@@ -70,112 +99,144 @@ const iconMap = {
   Users,
   Heart,
   Star,
-}
+};
 
 export function CategoriesManagement() {
-  const [categories, setCategories] = useState(dummyCategories)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<any>(null)
+  const [categories, setCategories] = useState(dummyCategories);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<TCCategory | any>(null);
   const createCategory = useCreateCategory();
-  
-  
+
   const form = useForm<TCCategory>({
     resolver: zodResolver(ZCCategory),
     defaultValues: {
       name: "",
-      description: ""
+      description: "",
     },
-  })
+  });
 
-  const handleSubmit = (data:any) => {
+  const handleSubmit = (data: any) => {
     try {
-      createCategory.mutate(data,{
-        onSuccess: (data) => {
-          console.log(data)
-          toast.success("ক্যাটেগরি সফলভাবে তৈরি হয়েছে")
-        },
-        onError: (error) => {
-          console.log(error)
-          toast.error("ক্যাটেগরি তৈরি ব্যর্থ হয়েছে")
-        }
-      })
+      if (editingCategory) {
+        toast.info("ক্যাটেগরি আপডেট ফিচারটি এখনও উপলব্ধ নয়");
+      } else {
+        createCategory.mutate(data, {
+          onSuccess: (data) => {
+            console.log(data);
+            toast.success("ক্যাটেগরি সফলভাবে তৈরি হয়েছে");
+            setIsDialogOpen(false);
+            form.reset();
+          },
+          onError: (error) => {
+            console.log(error);
+            toast.error("ক্যাটেগরি তৈরি ব্যর্থ হয়েছে");
+          },
+        });
+      }
     } catch (error) {
-      toast.error("ক্যাটেগরি তৈরি ব্যর্থ হয়েছে")
+      toast.error("ক্যাটেগরি তৈরি ব্যর্থ হয়েছে");
     }
-    console.log(data,"fommmmmmmmmmmmmmmmmmmmmmmmmmmm")
-  }
+    console.log(data, "fommmmmmmmmmmmmmmmmmmmmmmmmmmm");
+  };
 
   const handleEdit = (category: any) => {
-
-    setIsDialogOpen(true)
-  }
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = (categoryId: number) => {
-    setCategories(categories.filter((cat) => cat.id !== categoryId))
-  }
+    setCategories(categories.filter((cat) => cat.id !== categoryId));
+  };
+
+  const handleOpenDialog = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      form.reset({ name: "", description: "" });
+      setEditingCategory(null);
+    } else {
+      if (!editingCategory) {
+        form.reset({ name: "", description: "" });
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">ক্যাটেগরি ব্যবস্থাপনা</h1>
-          <p className="text-muted-foreground">আপনার ব্লগের ক্যাটেগরিসমূহ পরিচালনা করুন</p>
+          <p className="text-muted-foreground">
+            আপনার ব্লগের ক্যাটেগরিসমূহ পরিচালনা করুন
+          </p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenDialog}>
           <DialogTrigger asChild>
-            <Button
-             
-            >
+            <Button onClick={() => setEditingCategory(null)}>
               <Plus className="mr-2 h-4 w-4" />
               নতুন ক্যাটেগরি
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingCategory ? "ক্যাটেগরি সম্পাদনা" : "নতুন ক্যাটেগরি"}</DialogTitle>
+              <DialogTitle>
+                {editingCategory ? "ক্যাটেগরি সম্পাদনা" : "নতুন ক্যাটেগরি" }
+
+              </DialogTitle>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-         
-
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ক্যাটেগরির নাম</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                  
-                )}></FormField>
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ক্যাটেগরির নাম</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                ></FormField>
 
                 <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>বিবরণ</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}></FormField>
-           
-              
-              <div className="flex gap-2">
-                {/* <Button type="submit">{editingCategory ? "আপডেট করুন" : "তৈরি করুন"}</Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  বাতিল
-                </Button> */}
-                <Button type="submit">{editingCategory ? "আপডেট করুন" : "তৈরি করুন"}</Button>  
-                
-              </div>
-            </form>
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>বিবরণ</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                ></FormField>
+
+                <div className="flex gap-2">
+                  <Button
+                    className="cursor-pointer"
+                    type="submit"
+                    disabled={createCategory.isPending}
+                  >
+                    {createCategory.isPending
+                      ? "লোড হচ্ছে..."
+                      : editingCategory
+                      ? "আপডেট করুন"
+                      : "তৈরি করুন"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    বাতিল
+                  </Button>
+                </div>
+              </form>
             </Form>
           </DialogContent>
         </Dialog>
@@ -198,7 +259,8 @@ export function CategoriesManagement() {
             </TableHeader>
             <TableBody>
               {categories.map((category) => {
-                const IconComponent = iconMap[category.icon as keyof typeof iconMap]
+                const IconComponent =
+                  iconMap[category.icon as keyof typeof iconMap];
                 return (
                   <TableRow key={category.id}>
                     <TableCell>
@@ -206,12 +268,20 @@ export function CategoriesManagement() {
                         <IconComponent className="h-4 w-4" />
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{category.name}</TableCell>
-                    <TableCell className="text-balance">{category.description}</TableCell>
+                    <TableCell className="font-medium">
+                      {category.name}
+                    </TableCell>
+                    <TableCell className="text-balance">
+                      {category.description}
+                    </TableCell>
                     <TableCell>{category.postCount}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(category)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(category)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -225,12 +295,12 @@ export function CategoriesManagement() {
                       </div>
                     </TableCell>
                   </TableRow>
-                )
+                );
               })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
